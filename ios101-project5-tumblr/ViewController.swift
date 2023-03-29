@@ -6,12 +6,41 @@
 import UIKit
 import Nuke
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, UITableViewDataSource {
 
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        // Return the number of posts for the table.
+        return posts.count
+    }
 
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
+        let cell = tableView.dequeueReusableCell(withIdentifier: "PostCell", for: indexPath) as! PostCell
+
+        let post = posts[indexPath.row]
+        
+        if let photo = post.photos.first {
+            let url = photo.originalSize.url
+              
+            Nuke.loadImage(with: url, into: cell.postImage)
+
+        }
+
+        cell.summaryLabel.text = post.summary
+        
+        // Return the cell for use in the respective table view row
+        return cell
+    }
+    
+    //connect tableView UI element
+    @IBOutlet weak var tableView: UITableView!
+    //store movies we fetch
+    private var posts: [Post] = []
+
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        tableView.dataSource = self
         
         fetchPosts()
     }
@@ -38,8 +67,12 @@ class ViewController: UIViewController {
 
             do {
                 let blog = try JSONDecoder().decode(Blog.self, from: data)
+                
+                let posts = blog.response.posts
+                
 
-                DispatchQueue.main.async { [weak self] in
+                DispatchQueue.main.async { [weak self] in self?.posts = posts
+                    self?.tableView.reloadData()
 
                     let posts = blog.response.posts
 
